@@ -1,0 +1,59 @@
+Tracking Voyager Spacecraft with Python
+
+
+python3 -c "from astroquery.jplhorizons import Horizons; voyager2 = Horizons(id='-32', location='@sun', epochs={'start':'2025-03-20', 'stop':'2025-03-21', 'step':'1d'}); vectors = voyager2.vectors(); print('Heliocentric position vectors for Voyager 2:'); print(vectors['datetime_str', 'x', 'y', 'z'])"
+Heliocentric position vectors for Voyager 2:
+         datetime_str                  x                 y                  z         
+             ---                       AU                AU                 AU        
+------------------------------ ----------------- ------------------ ------------------
+A.D. 2025-Mar-20 00:00:00.0000 38.53065086935701 -102.4431363084889 -86.04175410352035
+A.D. 2025-Mar-21 00:00:00.0000  38.5330796745504 -102.4485316708592  -86.0482951709522
+
+
+from astroquery.jplhorizons import Horizons
+
+# Query Voyager 1 positions relative to the Sun
+# -31 is the HORIZONS ID for Voyager 1
+voyager1 = Horizons(id='-31', 
+                  location='@sun',  # Observer at Sun (heliocentric)
+                  epochs={'start':'2025-03-20', 
+                          'stop':'2025-03-27', 
+                          'step':'1d'})  # Daily positions for a week
+
+# Get ephemerides data (positional information)
+data = voyager1.ephemerides()
+
+# Print selected columns
+print(data['datetime_str', 'r', 'delta', 'lighttime', 'RA', 'DEC', 'EclLon', 'EclLat'])
+
+
+The output shows:
+•  r: Distance from the Sun in AU (166.45 AU for Voyager 1)
+•  delta: Distance from Earth in AU
+•  lighttime: Light travel time in minutes (~1384 minutes or ~23 hours)
+•  RA/DEC: Right Ascension and Declination (celestial coordinates)
+•  EclLon/EclLat: Ecliptic longitude and latitude
+
+Getting Vector Information:
+
+For more detailed positional data, you can use the vectors() method to get the heliocentric position vectors:
+
+
+Tracking Voyager Spacecraft with Python
+
+I found that you can use the astroquery library (which is already installed on your system) to obtain positional information about both Voyager 1 and Voyager 2 spacecraft. This library interfaces with NASA's HORIZONS system, which provides accurate ephemeris data for solar system objects including deep space probes.
+
+
+
+# For Voyager 2 (-32 is the HORIZONS ID)
+voyager2 = Horizons(id='-32', 
+                  location='@sun', 
+                  epochs={'start':'2025-03-20', 
+                          'stop':'2025-03-21', 
+                          'step':'1d'})
+
+# Get vector data
+vectors = voyager2.vectors()
+
+# Print position vectors
+print(vectors['datetime_str', 'x', 'y', 'z'])

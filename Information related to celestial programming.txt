@@ -1,0 +1,9 @@
+Information related to celestial programming
+
+
+Solar System Objects
+https://ssd.jpl.nasa.gov/
+
+SSD provides information related to the orbits, physical characteristics, and discovery circumstances for most known natural bodies in our solar system.
+
+

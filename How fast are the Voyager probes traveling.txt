@@ -1,0 +1,13 @@
+How fast are the Voyager probes traveling 
+ 
+Mistral:latest
+ 
+The Voyager 1 and Voyager 2 spaceprobes are moving at a very high speed. As of January 2023, Voyager 1 is traveling at approximately 17 kilometers per second (about 61,800 kilometers per hour or 38,400 miles per hour), and Voyager 2 is moving at about 15 kilometers per second (about 56,000 kilometers per hour or 34,800 miles per hour). These speeds are relative to the Sun, as they are moving away from it. They were launched by NASA in the mid-1970s and have been exploring the outer Solar System since then. As of now, Voyager 1 has left our solar system and is in interstellar space, while Voyager 2 is still within the heliosphere (the region of influence of the Sun). 
+
+               kps        kph       mph
+
+Voyager 1      17        61,800     38,400         
+
+Voyager 2      15        56,000     34,800
+    
+
