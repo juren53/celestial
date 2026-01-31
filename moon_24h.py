@@ -29,7 +29,7 @@ def main():
     print(f"{'':->66}")
 
     # Start from the next whole hour
-    now_utc = datetime.datetime.utcnow()
+    now_utc = datetime.datetime.now(datetime.UTC)
     start = now_utc.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
 
     for hour in range(24):
