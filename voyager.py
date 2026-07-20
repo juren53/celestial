@@ -128,8 +128,9 @@ def main():
     voyager1 = VoyagerProbe(
         name="Voyager 1",
         launch_date=1977,
-        distance_at_epoch=24_900_000_000,  # kilometers, as of distance_epoch
-        distance_epoch=datetime.date(2025, 12, 1),
+        # NASA's "1 light-day from Earth" milestone (science.nasa.gov)
+        distance_at_epoch=25_902_068_356,  # kilometers, as of distance_epoch
+        distance_epoch=datetime.date(2026, 11, 18),
         speed_mph=38_210,  # miles per hour
         ra='17:12:06',   # heading toward the constellation Ophiuchus
         dec='+12:04:00'
@@ -138,8 +139,9 @@ def main():
     voyager2 = VoyagerProbe(
         name="Voyager 2",
         launch_date=1977,
-        distance_at_epoch=20_700_000_000,  # kilometers, as of distance_epoch
-        distance_epoch=datetime.date(2025, 12, 1),
+        # 143.09 AU from Earth per NASA/JPL tracking (science.nasa.gov)
+        distance_at_epoch=21_400_000_000,  # kilometers, as of distance_epoch
+        distance_epoch=datetime.date(2026, 2, 9),
         speed_mph=35_000,  # miles per hour
         ra='20:09:33',   # heading toward the constellation Pavo/Telescopium
         dec='-30:40:00'
