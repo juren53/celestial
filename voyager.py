@@ -128,9 +128,9 @@ def main():
     voyager1 = VoyagerProbe(
         name="Voyager 1",
         launch_date=1977,
-        # NASA's "1 light-day from Earth" milestone (science.nasa.gov)
-        distance_at_epoch=25_902_068_356,  # kilometers, as of distance_epoch
-        distance_epoch=datetime.date(2026, 11, 18),
+        # 170.563053 AU from Earth per JPL Horizons ephemeris (ssd.jpl.nasa.gov)
+        distance_at_epoch=25_515_869_488,  # kilometers, as of distance_epoch
+        distance_epoch=datetime.date(2026, 7, 20),
         speed_mph=38_210,  # miles per hour
         ra='17:12:06',   # heading toward the constellation Ophiuchus
         dec='+12:04:00'
