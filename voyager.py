@@ -106,14 +106,15 @@ class VoyagerProbe:
         """
         Calculate the light travel time from the probe to Earth.
 
-        :return: Light time in hours and minutes
+        :return: Light time as (hours, minutes, seconds)
         """
         speed_of_light_kms = 299_792.458  # km/s
         light_time_seconds = self.calculate_current_distance() / speed_of_light_kms
-        light_time_hours = light_time_seconds / 3600
-        light_time_minutes = (light_time_seconds % 3600) / 60
-        
-        return light_time_hours, light_time_minutes
+        hours = int(light_time_seconds // 3600)
+        minutes = int((light_time_seconds % 3600) // 60)
+        seconds = int(light_time_seconds % 60)
+
+        return hours, minutes, seconds
 
     def calculate_alt_az(self, lat=OBSERVER_LAT, lon=OBSERVER_LON):
         """
@@ -186,8 +187,8 @@ def main():
     print(f"Heliocentric Speed: {voyager1.calculate_heliocentric_speed('kms'):.2f} km/s")
     print(f"Years in Space: {voyager1.calculate_years_in_space()}")
     print(f"Estimated Total Distance Traveled: {voyager1.calculate_total_distance_traveled() / 1_000_000_000:.2f} billion km")
-    hours, minutes = voyager1.calculate_light_time()
-    print(f"Light Time from Earth: {int(hours)} hours {int(minutes)} minutes")
+    hours, minutes, seconds = voyager1.calculate_light_time()
+    print(f"Light Time from Earth: {hours} hours {minutes} minutes {seconds} seconds")
     alt, az = voyager1.calculate_alt_az()
     print(f"Current position above Kansas City:")
     print(f"  Altitude: {alt:.2f}° ({alt:.2f} degrees above horizon)")
@@ -202,8 +203,8 @@ def main():
     print(f"Heliocentric Speed: {voyager2.calculate_heliocentric_speed('kms'):.2f} km/s")
     print(f"Years in Space: {voyager2.calculate_years_in_space()}")
     print(f"Estimated Total Distance Traveled: {voyager2.calculate_total_distance_traveled() / 1_000_000_000:.2f} billion km")
-    hours, minutes = voyager2.calculate_light_time()
-    print(f"Light Time from Earth: {int(hours)} hours {int(minutes)} minutes")
+    hours, minutes, seconds = voyager2.calculate_light_time()
+    print(f"Light Time from Earth: {hours} hours {minutes} minutes {seconds} seconds")
     alt, az = voyager2.calculate_alt_az()
     print(f"Current position above Kansas City:")
     print(f"  Altitude: {alt:.2f}° ({alt:.2f} degrees above horizon)")
