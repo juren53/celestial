@@ -30,8 +30,12 @@ class VoyagerProbe:
         self.distance_at_epoch = distance_at_epoch
         self.distance_epoch = distance_epoch
 
-        # Sky position (RA/Dec). The probes are so distant that this direction
-        # shifts negligibly over human timescales, so it's treated as fixed.
+        # Sky position (RA/Dec), treated as fixed since it shifts slowly.
+        # NOTE: this is a snapshot, not a live value (PyEphem's FixedBody
+        # won't advance it) - drifted ~0.8 deg/year for Voyager 1 as of
+        # 2026, and Voyager 2 drifts enough to matter over a year too.
+        # Re-check both against JPL Horizons about once a year and update
+        # the ra/dec literals below.
         self.ra = ra
         self.dec = dec
 
