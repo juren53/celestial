@@ -140,6 +140,17 @@ class VoyagerProbe:
 
         return altitude_deg, azimuth_deg
 
+    def calculate_constellation(self):
+        """
+        Determine which constellation contains the probe's current sky
+        position. Based on RA/Dec (fixed on the celestial sphere), not
+        alt/az, since alt/az changes with observer time and location.
+
+        :return: Full constellation name
+        """
+        _, full_name = ephem.constellation((ephem.hours(self.ra), ephem.degrees(self.dec)))
+        return full_name
+
 def main():
     # Create Voyager probe instances with their specific speeds
     # Voyager 1 is traveling slightly faster than Voyager 2
@@ -181,6 +192,7 @@ def main():
     print(f"Current position above Kansas City:")
     print(f"  Altitude: {alt:.2f}° ({alt:.2f} degrees above horizon)")
     print(f"  Azimuth: {az:.2f}° ({get_compass_direction(az)})")
+    print(f"  Constellation: {voyager1.calculate_constellation()}")
 
     print("\n")
     
@@ -196,6 +208,7 @@ def main():
     print(f"Current position above Kansas City:")
     print(f"  Altitude: {alt:.2f}° ({alt:.2f} degrees above horizon)")
     print(f"  Azimuth: {az:.2f}° ({get_compass_direction(az)})")
+    print(f"  Constellation: {voyager2.calculate_constellation()}")
 
 if __name__ == "__main__":
     main()
