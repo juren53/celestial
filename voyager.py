@@ -1,17 +1,38 @@
+import ephem
+import datetime
+
+# Kansas City, MO observer location (matches moon.py)
+OBSERVER_LAT = '39.0997'
+OBSERVER_LON = '-94.5786'
+
+# Helper function to convert azimuth in degrees to a compass direction
+def get_compass_direction(azimuth):
+    directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
+                  "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+    index = round(azimuth / 22.5) % 16
+    return directions[index]
+
 class VoyagerProbe:
-    def __init__(self, name, launch_date, current_distance, speed_mph):
+    def __init__(self, name, launch_date, current_distance, speed_mph, ra, dec):
         """
         Initialize a Voyager probe with its specific mission parameters.
-        
+
         :param name: Name of the probe (Voyager 1 or Voyager 2)
         :param launch_date: Date of launch
         :param current_distance: Current distance from Earth in kilometers
         :param speed_mph: Heliocentric speed in miles per hour
+        :param ra: Right ascension of the probe's current sky position (e.g. '17:12:06')
+        :param dec: Declination of the probe's current sky position (e.g. '+12:04:00')
         """
         self.name = name
         self.launch_date = launch_date
         self.current_distance = current_distance
-        
+
+        # Sky position (RA/Dec). The probes are so distant that this direction
+        # shifts negligibly over human timescales, so it's treated as fixed.
+        self.ra = ra
+        self.dec = dec
+
         # Specific velocities for each probe
         self.speed_mph = speed_mph
         self.speed_kms = speed_mph * 0.44704 / 1000  # Convert mph to km/s
@@ -63,21 +84,50 @@ class VoyagerProbe:
         
         return light_time_hours, light_time_minutes
 
+    def calculate_alt_az(self, lat=OBSERVER_LAT, lon=OBSERVER_LON):
+        """
+        Calculate the probe's current altitude and azimuth as seen from an
+        observer location on Earth.
+
+        :param lat: Observer latitude (default Kansas City, MO)
+        :param lon: Observer longitude (default Kansas City, MO)
+        :return: (altitude_deg, azimuth_deg)
+        """
+        observer = ephem.Observer()
+        observer.lat = lat
+        observer.lon = lon
+        observer.date = datetime.datetime.utcnow()  # PyEphem expects UTC time
+
+        probe = ephem.FixedBody()
+        probe._ra = ephem.hours(self.ra)
+        probe._dec = ephem.degrees(self.dec)
+        probe._epoch = ephem.J2000
+        probe.compute(observer)
+
+        altitude_deg = float(probe.alt) * 180 / 3.1415926
+        azimuth_deg = float(probe.az) * 180 / 3.1415926
+
+        return altitude_deg, azimuth_deg
+
 def main():
     # Create Voyager probe instances with their specific speeds
     # Voyager 1 is traveling slightly faster than Voyager 2
     voyager1 = VoyagerProbe(
-        name="Voyager 1", 
-        launch_date=1977, 
+        name="Voyager 1",
+        launch_date=1977,
         current_distance=24_900_000_000,  # kilometers (Dec 2025)
-        speed_mph=38_210  # miles per hour
+        speed_mph=38_210,  # miles per hour
+        ra='17:12:06',   # heading toward the constellation Ophiuchus
+        dec='+12:04:00'
     )
-    
+
     voyager2 = VoyagerProbe(
-        name="Voyager 2", 
-        launch_date=1977, 
+        name="Voyager 2",
+        launch_date=1977,
         current_distance=20_700_000_000,  # kilometers (Dec 2025)
-        speed_mph=35_000  # miles per hour
+        speed_mph=35_000,  # miles per hour
+        ra='20:09:33',   # heading toward the constellation Pavo/Telescopium
+        dec='-30:40:00'
     )
     
     # Probe 1 calculations
@@ -88,7 +138,11 @@ def main():
     print(f"Estimated Total Distance Traveled: {voyager1.calculate_total_distance_traveled() / 1_000_000_000:.2f} billion km")
     hours, minutes = voyager1.calculate_light_time()
     print(f"Light Time from Earth: {int(hours)} hours {int(minutes)} minutes")
-    
+    alt, az = voyager1.calculate_alt_az()
+    print(f"Current position above Kansas City:")
+    print(f"  Altitude: {alt:.2f}° ({alt:.2f} degrees above horizon)")
+    print(f"  Azimuth: {az:.2f}° ({get_compass_direction(az)})")
+
     print("\n")
     
     # Probe 2 calculations
@@ -99,6 +153,10 @@ def main():
     print(f"Estimated Total Distance Traveled: {voyager2.calculate_total_distance_traveled() / 1_000_000_000:.2f} billion km")
     hours, minutes = voyager2.calculate_light_time()
     print(f"Light Time from Earth: {int(hours)} hours {int(minutes)} minutes")
+    alt, az = voyager2.calculate_alt_az()
+    print(f"Current position above Kansas City:")
+    print(f"  Altitude: {alt:.2f}° ({alt:.2f} degrees above horizon)")
+    print(f"  Azimuth: {az:.2f}° ({get_compass_direction(az)})")
 
 if __name__ == "__main__":
     main()
