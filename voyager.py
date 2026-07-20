@@ -139,9 +139,9 @@ def main():
     voyager2 = VoyagerProbe(
         name="Voyager 2",
         launch_date=1977,
-        # 143.09 AU from Earth per NASA/JPL tracking (science.nasa.gov)
-        distance_at_epoch=21_400_000_000,  # kilometers, as of distance_epoch
-        distance_epoch=datetime.date(2026, 2, 9),
+        # 142.654588 AU from Earth per JPL Horizons ephemeris (ssd.jpl.nasa.gov)
+        distance_at_epoch=21_340_822_626,  # kilometers, as of distance_epoch
+        distance_epoch=datetime.date(2026, 7, 20),
         speed_mph=35_000,  # miles per hour
         ra='20:09:33',   # heading toward the constellation Pavo/Telescopium
         dec='-30:40:00'
