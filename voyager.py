@@ -13,7 +13,7 @@ def get_compass_direction(azimuth):
     return directions[index]
 
 class VoyagerProbe:
-    def __init__(self, name, launch_date, distance_at_epoch, distance_epoch, speed_mph, ra, dec):
+    def __init__(self, name, launch_date, distance_at_epoch, distance_epoch, range_rate_kms, speed_mph, ra, dec):
         """
         Initialize a Voyager probe with its specific mission parameters.
 
@@ -21,6 +21,10 @@ class VoyagerProbe:
         :param launch_date: Date of launch
         :param distance_at_epoch: Distance from Earth in kilometers, as measured on distance_epoch
         :param distance_epoch: datetime.date the distance_at_epoch measurement was taken
+        :param range_rate_kms: Earth-relative recession rate (JPL Horizons "deldot") in km/s,
+            as of distance_epoch - used to extrapolate distance_at_epoch forward/backward.
+            This is NOT the same as the heliocentric speed_mph: it also includes Earth's own
+            orbital velocity component, so it's larger and varies with time of year.
         :param speed_mph: Heliocentric speed in miles per hour
         :param ra: Right ascension of the probe's current sky position (e.g. '17:12:06')
         :param dec: Declination of the probe's current sky position (e.g. '+12:04:00')
@@ -29,13 +33,17 @@ class VoyagerProbe:
         self.launch_date = launch_date
         self.distance_at_epoch = distance_at_epoch
         self.distance_epoch = distance_epoch
+        self.range_rate_kms = range_rate_kms
 
         # Sky position (RA/Dec), treated as fixed since it shifts slowly.
         # NOTE: this is a snapshot, not a live value (PyEphem's FixedBody
         # won't advance it) - drifted ~0.8 deg/year for Voyager 1 as of
         # 2026, and Voyager 2 drifts enough to matter over a year too.
-        # Re-check both against JPL Horizons about once a year and update
-        # the ra/dec literals below.
+        # range_rate_kms also drifts (it varies with Earth's orbital phase,
+        # by tens of km/s over a year) so accuracy degrades the further
+        # distance_epoch is from today. Re-check ra/dec/distance/range-rate
+        # against JPL Horizons about once a year and update the literals
+        # below - a bigger drift than expected likely means it's overdue.
         self.ra = ra
         self.dec = dec
 
@@ -80,13 +88,14 @@ class VoyagerProbe:
     def calculate_current_distance(self):
         """
         Estimate the probe's current distance from Earth by extrapolating
-        from the distance_at_epoch snapshot using its heliocentric speed.
+        from the distance_at_epoch snapshot using the Earth-relative range
+        rate (not the heliocentric speed - see range_rate_kms docstring).
 
         :return: Estimated current distance in kilometers
         """
         days_elapsed = (datetime.date.today() - self.distance_epoch).days
         seconds_elapsed = days_elapsed * 24 * 60 * 60
-        return self.distance_at_epoch + self.speed_kms * seconds_elapsed
+        return self.distance_at_epoch + self.range_rate_kms * seconds_elapsed
 
     def calculate_light_time(self):
         """
@@ -135,6 +144,7 @@ def main():
         # 170.563053 AU from Earth per JPL Horizons ephemeris (ssd.jpl.nasa.gov)
         distance_at_epoch=25_515_869_488,  # kilometers, as of distance_epoch
         distance_epoch=datetime.date(2026, 7, 20),
+        range_rate_kms=32.4865832,  # Horizons deldot, as of distance_epoch
         speed_mph=38_210,  # miles per hour
         # RA/Dec per JPL Horizons for 2026-07-20 (heading toward Ophiuchus)
         ra='17:14:57.0',
@@ -147,6 +157,7 @@ def main():
         # 142.654588 AU from Earth per JPL Horizons ephemeris (ssd.jpl.nasa.gov)
         distance_at_epoch=21_340_822_626,  # kilometers, as of distance_epoch
         distance_epoch=datetime.date(2026, 7, 20),
+        range_rate_kms=17.6703595,  # Horizons deldot, as of distance_epoch
         speed_mph=35_000,  # miles per hour
         # RA/Dec per JPL Horizons for 2026-07-20 (heading toward Telescopium/Ara)
         ra='20:12:38.1',
