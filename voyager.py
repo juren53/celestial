@@ -13,20 +13,22 @@ def get_compass_direction(azimuth):
     return directions[index]
 
 class VoyagerProbe:
-    def __init__(self, name, launch_date, current_distance, speed_mph, ra, dec):
+    def __init__(self, name, launch_date, distance_at_epoch, distance_epoch, speed_mph, ra, dec):
         """
         Initialize a Voyager probe with its specific mission parameters.
 
         :param name: Name of the probe (Voyager 1 or Voyager 2)
         :param launch_date: Date of launch
-        :param current_distance: Current distance from Earth in kilometers
+        :param distance_at_epoch: Distance from Earth in kilometers, as measured on distance_epoch
+        :param distance_epoch: datetime.date the distance_at_epoch measurement was taken
         :param speed_mph: Heliocentric speed in miles per hour
         :param ra: Right ascension of the probe's current sky position (e.g. '17:12:06')
         :param dec: Declination of the probe's current sky position (e.g. '+12:04:00')
         """
         self.name = name
         self.launch_date = launch_date
-        self.current_distance = current_distance
+        self.distance_at_epoch = distance_at_epoch
+        self.distance_epoch = distance_epoch
 
         # Sky position (RA/Dec). The probes are so distant that this direction
         # shifts negligibly over human timescales, so it's treated as fixed.
@@ -71,14 +73,25 @@ class VoyagerProbe:
         
         return self.speed_kms * seconds_in_year * years_in_space
     
+    def calculate_current_distance(self):
+        """
+        Estimate the probe's current distance from Earth by extrapolating
+        from the distance_at_epoch snapshot using its heliocentric speed.
+
+        :return: Estimated current distance in kilometers
+        """
+        days_elapsed = (datetime.date.today() - self.distance_epoch).days
+        seconds_elapsed = days_elapsed * 24 * 60 * 60
+        return self.distance_at_epoch + self.speed_kms * seconds_elapsed
+
     def calculate_light_time(self):
         """
         Calculate the light travel time from the probe to Earth.
-        
+
         :return: Light time in hours and minutes
         """
         speed_of_light_kms = 299_792.458  # km/s
-        light_time_seconds = self.current_distance / speed_of_light_kms
+        light_time_seconds = self.calculate_current_distance() / speed_of_light_kms
         light_time_hours = light_time_seconds / 3600
         light_time_minutes = (light_time_seconds % 3600) / 60
         
@@ -115,7 +128,8 @@ def main():
     voyager1 = VoyagerProbe(
         name="Voyager 1",
         launch_date=1977,
-        current_distance=24_900_000_000,  # kilometers (Dec 2025)
+        distance_at_epoch=24_900_000_000,  # kilometers, as of distance_epoch
+        distance_epoch=datetime.date(2025, 12, 1),
         speed_mph=38_210,  # miles per hour
         ra='17:12:06',   # heading toward the constellation Ophiuchus
         dec='+12:04:00'
@@ -124,7 +138,8 @@ def main():
     voyager2 = VoyagerProbe(
         name="Voyager 2",
         launch_date=1977,
-        current_distance=20_700_000_000,  # kilometers (Dec 2025)
+        distance_at_epoch=20_700_000_000,  # kilometers, as of distance_epoch
+        distance_epoch=datetime.date(2025, 12, 1),
         speed_mph=35_000,  # miles per hour
         ra='20:09:33',   # heading toward the constellation Pavo/Telescopium
         dec='-30:40:00'
