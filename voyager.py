@@ -109,7 +109,7 @@ class VoyagerProbe:
         observer = ephem.Observer()
         observer.lat = lat
         observer.lon = lon
-        observer.date = datetime.datetime.utcnow()  # PyEphem expects UTC time
+        observer.date = datetime.datetime.now(datetime.UTC)  # PyEphem expects UTC time
 
         probe = ephem.FixedBody()
         probe._ra = ephem.hours(self.ra)
@@ -132,8 +132,9 @@ def main():
         distance_at_epoch=25_515_869_488,  # kilometers, as of distance_epoch
         distance_epoch=datetime.date(2026, 7, 20),
         speed_mph=38_210,  # miles per hour
-        ra='17:12:06',   # heading toward the constellation Ophiuchus
-        dec='+12:04:00'
+        # RA/Dec per JPL Horizons for 2026-07-20 (heading toward Ophiuchus)
+        ra='17:14:57.0',
+        dec='+12:23:36.3'
     )
 
     voyager2 = VoyagerProbe(
@@ -143,8 +144,9 @@ def main():
         distance_at_epoch=21_340_822_626,  # kilometers, as of distance_epoch
         distance_epoch=datetime.date(2026, 7, 20),
         speed_mph=35_000,  # miles per hour
-        ra='20:09:33',   # heading toward the constellation Pavo/Telescopium
-        dec='-30:40:00'
+        # RA/Dec per JPL Horizons for 2026-07-20 (heading toward Telescopium/Ara)
+        ra='20:12:38.1',
+        dec='-59:47:55.3'
     )
     
     # Probe 1 calculations
