@@ -42,8 +42,13 @@ class VoyagerProbe:
         # range_rate_kms also drifts (it varies with Earth's orbital phase,
         # by tens of km/s over a year) so accuracy degrades the further
         # distance_epoch is from today. Re-check ra/dec/distance/range-rate
-        # against JPL Horizons about once a year and update the literals
-        # below - a bigger drift than expected likely means it's overdue.
+        # against JPL Horizons about once a year (Voyager 1) - a bigger
+        # drift than expected likely means it's overdue. Voyager 2's
+        # range_rate_kms swings much more over a year (~17.7 to ~34.2 km/s
+        # in 2026) since its far-southern declination makes Earth's orbital
+        # velocity component vary more sharply, so its light-time/distance
+        # projection drifts outside a "minute or two" of accuracy within
+        # roughly 6-8 weeks - re-check Voyager 2 quarterly instead.
         self.ra = ra
         self.dec = dec
 
