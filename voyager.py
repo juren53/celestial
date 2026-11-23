@@ -1,5 +1,8 @@
 import ephem
 import datetime
+import math
+
+AU_KM = 149_597_870.7
 
 # Kansas City, MO observer location (matches moon.py)
 OBSERVER_LAT = '39.0997'
@@ -12,8 +15,22 @@ def get_compass_direction(azimuth):
     index = round(azimuth / 22.5) % 16
     return directions[index]
 
+def _equatorial_vector(ra, dec, distance):
+    """Convert RA/Dec (radians) and distance into an equatorial x, y, z vector."""
+    ra, dec = float(ra), float(dec)
+    return [distance * math.cos(dec) * math.cos(ra),
+            distance * math.cos(dec) * math.sin(ra),
+            distance * math.sin(dec)]
+
+def _earth_position_km(when):
+    """Earth's heliocentric equatorial (J2000) position in km at a UTC datetime."""
+    sun = ephem.Sun()
+    sun.compute(ephem.Date(when))
+    # Earth is opposite the geocentric Sun direction
+    return [-c for c in _equatorial_vector(sun.a_ra, sun.a_dec, sun.earth_distance * AU_KM)]
+
 class VoyagerProbe:
-    def __init__(self, name, launch_date, distance_at_epoch, distance_epoch, range_rate_kms, speed_mph, ra, dec):
+    def __init__(self, name, launch_date, distance_at_epoch, distance_epoch, speed_mph, ra, dec):
         """
         Initialize a Voyager probe with its specific mission parameters.
 
@@ -21,10 +38,7 @@ class VoyagerProbe:
         :param launch_date: Date of launch
         :param distance_at_epoch: Distance from Earth in kilometers, as measured on distance_epoch
         :param distance_epoch: datetime.date the distance_at_epoch measurement was taken
-        :param range_rate_kms: Earth-relative recession rate (JPL Horizons "deldot") in km/s,
-            as of distance_epoch - used to extrapolate distance_at_epoch forward/backward.
-            This is NOT the same as the heliocentric speed_mph: it also includes Earth's own
-            orbital velocity component, so it's larger and varies with time of year.
+            (and the date the ra/dec snapshot is for)
         :param speed_mph: Heliocentric speed in miles per hour
         :param ra: Right ascension of the probe's current sky position (e.g. '17:12:06')
         :param dec: Declination of the probe's current sky position (e.g. '+12:04:00')
@@ -33,22 +47,16 @@ class VoyagerProbe:
         self.launch_date = launch_date
         self.distance_at_epoch = distance_at_epoch
         self.distance_epoch = distance_epoch
-        self.range_rate_kms = range_rate_kms
 
         # Sky position (RA/Dec), treated as fixed since it shifts slowly.
         # NOTE: this is a snapshot, not a live value (PyEphem's FixedBody
         # won't advance it) - drifted ~0.8 deg/year for Voyager 1 as of
         # 2026, and Voyager 2 drifts enough to matter over a year too.
-        # range_rate_kms also drifts (it varies with Earth's orbital phase,
-        # by tens of km/s over a year) so accuracy degrades the further
-        # distance_epoch is from today. Re-check ra/dec/distance/range-rate
-        # against JPL Horizons about once a year (Voyager 1) - a bigger
-        # drift than expected likely means it's overdue. Voyager 2's
-        # range_rate_kms swings much more over a year (~17.7 to ~34.2 km/s
-        # in 2026) since its far-southern declination makes Earth's orbital
-        # velocity component vary more sharply, so its light-time/distance
-        # projection drifts outside a "minute or two" of accuracy within
-        # roughly 6-8 weeks - re-check Voyager 2 quarterly instead.
+        # Distance/light time is projected geometrically (see
+        # calculate_current_distance), which tracks Earth's orbital motion,
+        # so it stays accurate for much longer than the old constant
+        # range-rate extrapolation did. Still re-check ra/dec/distance
+        # against JPL Horizons about once a year.
         self.ra = ra
         self.dec = dec
 
@@ -92,15 +100,30 @@ class VoyagerProbe:
     
     def calculate_current_distance(self):
         """
-        Estimate the probe's current distance from Earth by extrapolating
-        from the distance_at_epoch snapshot using the Earth-relative range
-        rate (not the heliocentric speed - see range_rate_kms docstring).
+        Estimate the probe's current distance from Earth.
+
+        Earth's orbital motion makes the Earth-probe range rate swing by
+        tens of km/s over a year, so a constant-rate extrapolation drifts
+        by minutes of light time within a few months. Instead:
+          1. Convert the epoch snapshot (RA/Dec + distance from Earth) into
+             a heliocentric position by adding Earth's position on that date.
+          2. Move the probe radially outward from the Sun at its
+             heliocentric speed (its trajectory is essentially radial now).
+          3. Take the distance from Earth's actual position today.
 
         :return: Estimated current distance in kilometers
         """
-        days_elapsed = (datetime.date.today() - self.distance_epoch).days
-        seconds_elapsed = days_elapsed * 24 * 60 * 60
-        return self.distance_at_epoch + self.range_rate_kms * seconds_elapsed
+        epoch = datetime.datetime.combine(self.distance_epoch, datetime.time())
+        now = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+
+        geo = _equatorial_vector(ephem.hours(self.ra), ephem.degrees(self.dec),
+                                 self.distance_at_epoch)
+        helio = [g + e for g, e in zip(geo, _earth_position_km(epoch))]
+        r = math.hypot(*helio)
+        seconds_elapsed = (now - epoch).total_seconds()
+        helio_now = [p * (1 + self.speed_kms * seconds_elapsed / r) for p in helio]
+
+        return math.dist(helio_now, _earth_position_km(now))
 
     def calculate_light_time(self):
         """
@@ -161,7 +184,6 @@ def main():
         # 170.563053 AU from Earth per JPL Horizons ephemeris (ssd.jpl.nasa.gov)
         distance_at_epoch=25_515_869_488,  # kilometers, as of distance_epoch
         distance_epoch=datetime.date(2026, 7, 20),
-        range_rate_kms=32.4865832,  # Horizons deldot, as of distance_epoch
         speed_mph=38_210,  # miles per hour
         # RA/Dec per JPL Horizons for 2026-07-20 (heading toward Ophiuchus)
         ra='17:14:57.0',
@@ -174,7 +196,6 @@ def main():
         # 142.654588 AU from Earth per JPL Horizons ephemeris (ssd.jpl.nasa.gov)
         distance_at_epoch=21_340_822_626,  # kilometers, as of distance_epoch
         distance_epoch=datetime.date(2026, 7, 20),
-        range_rate_kms=17.6703595,  # Horizons deldot, as of distance_epoch
         speed_mph=35_000,  # miles per hour
         # RA/Dec per JPL Horizons for 2026-07-20 (heading toward Telescopium/Ara)
         ra='20:12:38.1',
