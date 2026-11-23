@@ -196,7 +196,7 @@ def main():
         # 142.654588 AU from Earth per JPL Horizons ephemeris (ssd.jpl.nasa.gov)
         distance_at_epoch=21_340_822_626,  # kilometers, as of distance_epoch
         distance_epoch=datetime.date(2026, 7, 20),
-        speed_mph=35_000,  # miles per hour
+        speed_mph=34_225,  # miles per hour (~15.3 km/s)
         # RA/Dec per JPL Horizons for 2026-07-20 (heading toward Telescopium/Ara)
         ra='20:12:38.1',
         dec='-59:47:55.3'
